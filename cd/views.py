@@ -73,7 +73,7 @@ class SellProductAPIView(APIView):
         product = get_object_or_404(Product, slug=name)
 
         if product.quantity < quantity:
-            hub_endpoint = "http://127.0.0.8:8000/hub/v1/"
+            hub_endpoint = "http://127.0.0.1:8000/hub/v1/"
             response = requests.post(url=f"{hub_endpoint}cd/request/{name}/{quantity}/", timeout=5)
             response.raise_for_status()
 
