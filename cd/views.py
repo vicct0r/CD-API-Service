@@ -70,7 +70,7 @@ class SellProductAPIView(APIView):
                 "message": "This operation requires: product name, product quantity"
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        product = get_object_or_404(Product.objects.select_for_update(), slug=name)
+        product = get_object_or_404(Product, slug=name)
 
         if product.quantity < quantity:
             hub_endpoint = "http://127.0.0.8:8000/hub/v1/"
