@@ -7,6 +7,7 @@ from rest_framework import status
 
 from .serializers import ProductSerializer
 from .models import Product
+import requests
 
 
 class ProductsRegisterAPIView(APIView):
@@ -71,11 +72,25 @@ class SellProductAPIView(APIView):
         product = get_object_or_404(Product.objects.select_for_update(), slug=name)
 
         if product.quantity < quantity:
-            return Response({
-                "status": "error",
-                "message": f"Not enought unities of {product.name} on the Distribution Center."
-            }, status=status.HTTP_412_PRECONDITION_FAILED)
-        
+            hub_endpoint = f"http://192.168.1.79/hub/v1/"
+            quantity_required = quantity - product.quantity
+            
+            try:
+                response = requests.post(url=f"{hub_endpoint}cd/request/{product}/{quantity_required}/")
+                response.raise_for_status()
+            except Exception as e:
+                return Response({
+                    "status": "error",
+                    "message": "Something went wrong.",
+                    "error_msg": str(e)
+                }, status=status.HTTP_424_FAILED_DEPENDENCY)
+
+            if response.status_code != 200:
+                return Response({
+                    "status": "error",
+                    "message": "Something went wrong!"
+                }, status=status.HTTP_424_FAILED_DEPENDENCY)
+
         try:
             with transaction.atomic():
                 product.quantity -= quantity
@@ -154,7 +169,7 @@ class ProductRequestAPIView(APIView):
         product = get_object_or_404(Product, slug=slug)
 
         if product.quantity < quantity:
-            return Response(status=status.HTTP_409_CONFLICT)
+            return Response(status=status.HTTP_412_PRECONDITION_FAILED)
         else:
             return Response({
                 "status": "success",
