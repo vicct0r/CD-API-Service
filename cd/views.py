@@ -73,7 +73,7 @@ class SellProductAPIView(APIView):
         product = get_object_or_404(Product, slug=name)
 
         if product.quantity < quantity:
-            hub_endpoint = "http://192.168.1.62/hub/v1/"
+            hub_endpoint = "http://192.168.1.62:8000/hub/v1/"
 
             try:
                 quantity_needed = quantity - product.quantity
