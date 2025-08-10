@@ -64,7 +64,7 @@ class SellProductAPIView(APIView):
         name = kwargs.get('name')
         quantity = kwargs.get('quantity')
 
-        if not name and not quantity:
+        if not name or not quantity:
             return Response({
                 "status": "error",
                 "message": "This operation requires: product name, product quantity"
@@ -73,9 +73,18 @@ class SellProductAPIView(APIView):
         product = get_object_or_404(Product, slug=name)
 
         if product.quantity < quantity:
-            hub_endpoint = "http://127.0.0.1:8000/hub/v1/"
-            response = requests.post(url=f"{hub_endpoint}cd/request/{name}/{quantity}/", timeout=5)
-            response.raise_for_status()
+            hub_endpoint = "http://192.168.1.62/hub/v1/"
+
+            try:
+                quantity_needed = quantity - product.quantity
+                response = requests.post(url=f"{hub_endpoint}cd/request/{name}/{quantity_needed}/", timeout=5)
+                response.raise_for_status()
+            except Exception as e:
+                return Response({
+                    "status": "error",
+                    "message": "Something went wrong!",
+                    "error_msg": str(e)
+                }, status=status.HTTP_404_NOT_FOUND)
 
             if response.status_code != 200:
                 return Response({
