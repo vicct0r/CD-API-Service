@@ -62,8 +62,8 @@ class ProductsListAPIView(APIView):
 class SellProductAPIView(APIView):
     def post(self, request, *args, **kwargs):
         name = kwargs.get('name')
-        quantity = kwargs.get('quantity')
-
+        quantity = int(kwargs.get('quantity'))
+        
         if not name or not quantity:
             return Response({
                 "status": "error",
@@ -110,7 +110,7 @@ class SellProductAPIView(APIView):
 class BuyProductAPIView(APIView):
     def post(self, request, *args, **kwargs):
         product = kwargs.get('product')
-        quantity = kwargs.get('quantity')
+        quantity = int(kwargs.get('quantity'))
 
         if not product and not quantity:
             return Response({
@@ -159,7 +159,7 @@ class BuyProductAPIView(APIView):
 class ProductRequestAPIView(APIView):
     def get(self, request, *args, **kwargs):
         slug = kwargs.get('product')
-        quantity = kwargs.get('quantity')
+        quantity = int(kwargs.get('quantity'))
 
         if not slug and not quantity:
             return Response({
