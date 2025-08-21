@@ -41,7 +41,7 @@ class ProductChangeAPIView(APIView):
             }, status=status.HTTP_200_OK)
         else:
             return Response({
-                "status": "success",
+                "status": "error",
                 "message": f"Something went wrong: {serializer.errors}"
             }, status=status.HTTP_400_BAD_REQUEST)
 
@@ -61,9 +61,9 @@ class ProductsListAPIView(APIView):
 class SellProductAPIView(APIView):
     def post(self, request, *args, **kwargs):
         name = kwargs.get('name')
-        quantity = kwargs.get('quantity')
+        quantity = int(kwargs.get('quantity'))
 
-        if not name and not quantity:
+        if not name or quantity is None:
             return Response({
                 "status": "error",
                 "message": "This operation requires: product name, product quantity"
@@ -72,7 +72,7 @@ class SellProductAPIView(APIView):
         product = get_object_or_404(Product.objects.select_for_update(), slug=name)
 
         if product.quantity < quantity:
-            hub_endpoint = f"http://192.168.1.79/hub/v1/"
+            hub_endpoint = f"http://100.112.186.100/hub/v1/"
             quantity_required = quantity - product.quantity
             
             try:
@@ -81,7 +81,7 @@ class SellProductAPIView(APIView):
             except Exception as e:
                 return Response({
                     "status": "error",
-                    "message": "Something went wrong.",
+                    "message": "Could not stablish connection with the HUB.",
                     "error_msg": str(e)
                 }, status=status.HTTP_424_FAILED_DEPENDENCY)
 
@@ -109,13 +109,13 @@ class SellProductAPIView(APIView):
 class BuyProductAPIView(APIView):
     def post(self, request, *args, **kwargs):
         product = kwargs.get('product')
-        quantity = kwargs.get('quantity')
+        quantity = int(kwargs.get('quantity'))
 
-        if not product and not quantity:
+        if not product or quantity is None:
             return Response({
                 "status": "error",
                 "message": "Missing information: product name or quantity"
-            }, status=status.HTTP_424_FAILED_DEPENDENCY)
+            }, status=status.HTTP_400_BAD_REQUEST)
         
         product, created = Product.objects.get_or_create(slug=product)
 
@@ -158,9 +158,9 @@ class BuyProductAPIView(APIView):
 class ProductRequestAPIView(APIView):
     def get(self, request, *args, **kwargs):
         slug = kwargs.get('product')
-        quantity = kwargs.get('quantity')
+        quantity = int(kwargs.get('quantity'))
 
-        if not slug and not quantity:
+        if not slug or quantity is None:
             return Response({
                 "status": "error",
                 "message": "Provide the product and quantity for the service!"
@@ -169,13 +169,14 @@ class ProductRequestAPIView(APIView):
         product = get_object_or_404(Product, slug=slug)
 
         if product.quantity < quantity:
-            return Response(status=status.HTTP_412_PRECONDITION_FAILED)
+            enought_products = False
         else:
-            return Response({
-                "status": "success",
-                "available": product.is_active,
-                "quantity": product.quantity,
-                "price": product.price,
-                "requested quantity": quantity,
-                "total_price": product.price * quantity
-            }, status=status.HTTP_200_OK)
+            enought_products = True
+        
+        return Response({
+            "status": "success",
+            "product": product.name,
+            "quantity": product.quantity,
+            "price": product.price,
+            "available": enought_products
+        }, status=status.HTTP_200_OK)
