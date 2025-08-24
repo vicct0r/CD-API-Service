@@ -15,4 +15,6 @@ omit =
     */settings/*
     manage.py
 show_missing = True
-fail_under = 80  # Mínimo de coverage aceitável
+
+# Mínimo de coverage aceitável
+fail_under = 80
