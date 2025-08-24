@@ -10,7 +10,7 @@ class TestCD(TestCase):
             "quantity": 12,
             "price": 20.00
         }
-        
+
         response = requests.post(url=f"{self.url_base_cd}product/register/", data=data, timeout=5)
         assert response.status_code == 201
 
@@ -19,9 +19,9 @@ class TestCD(TestCase):
         assert response.json()['name'] == "orange_pi" and requests.json()['quantity'] == 12
 
     def test_request_cd(self):
-        response = requests.get(url=f"{self.url_base_cd}product/request/raspberry/13/")
+        response = requests.get(url=f"{self.url_base_cd}product/request/orange_pi/13/")
         assert response.json()['available'] == False and response.status_code == 200
 
     def test_sell_endpoint(self):
-        response = requests.post(url=f"{self.url_base_cd}product/sell/raspberry/10/", timeout=5)
+        response = requests.post(url=f"{self.url_base_cd}product/sell/orange_pi/10/", timeout=5)
         assert response.status_code == 200
