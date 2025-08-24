@@ -1,0 +1,18 @@
+[run]
+source = .
+omit =
+    */migrations/*
+    */tests/*
+    */__pycache__/*
+    */settings/*
+    manage.py
+
+[report]
+omit =
+    */migrations/*
+    */tests/*
+    */__pycache__/*
+    */settings/*
+    manage.py
+show_missing = True
+fail_under = 80  # Mínimo de coverage aceitável
