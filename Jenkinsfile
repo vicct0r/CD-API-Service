@@ -24,7 +24,9 @@ pipeline {
         stage('Run Tests') {
             steps {
                 echo 'Testing...'
-                $VENV/bin/python manage.py test
+                sh '''
+                    $VENV/bin/python manage.py test
+                '''
             }
         }
     }
