@@ -38,7 +38,7 @@ pipeline {
                 echo 'Running SonarQube analysis...'
                 withSonarQubeEnv('sonarserver') {
                     script {
-                        def scannerHome = tool 'SONAR6.2'  // nome cadastrado em "Global Tool Configuration"
+                        def scannerHome = tool 'SONAR6.2' 
                         sh """
                             ${scannerHome}/bin/sonar-scanner \
                               -Dsonar.projectKey=CD-API-Service \
