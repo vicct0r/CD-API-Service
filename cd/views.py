@@ -69,14 +69,14 @@ class SellProductAPIView(APIView):
                 "message": "This operation requires: product name, product quantity"
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        product = get_object_or_404(Product.objects.select_for_update(), slug=name)
+        product = get_object_or_404(Product, slug=name)
 
         if product.quantity < quantity:
             hub_endpoint = f"http://100.112.186.100:8000/hub/v1/"
             quantity_required = quantity - product.quantity
             
             try:
-                response = requests.post(url=f"{hub_endpoint}cd/request/{product}/{quantity_required}/")
+                response = requests.post(url=f"{hub_endpoint}cd/request/{product.slug}/{quantity_required}/")
                 response.raise_for_status()
             except Exception as e:
                 return Response({
