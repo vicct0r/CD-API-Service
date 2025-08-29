@@ -59,6 +59,11 @@ class ProductsListAPIView(APIView):
     
 
 class SellProductAPIView(APIView):
+    """
+    API view to handle selling products from the inventory.
+    Expects 'name' (product slug) and 'quantity' as parameters in the URL or request.
+    If stock is insufficient, attempts to restock from the HUB before completing the sale.
+    """
     def post(self, request, *args, **kwargs):
         name = kwargs.get('name')
         quantity = int(kwargs.get('quantity'))
@@ -76,20 +81,32 @@ class SellProductAPIView(APIView):
             quantity_required = quantity - product.quantity
             
             try:
-                response = requests.post(url=f"{hub_endpoint}cd/request/{product.slug}/{quantity_required}/")
+                response = requests.post(url=f"{hub_endpoint}cd/request/{product.slug}/{quantity_required}/", timeout=5)
                 response.raise_for_status()
+                try:
+                    hub_data = response.json()
+                except ValueError:
+                    hub_data = None  # Response was not JSON
             except Exception as e:
                 return Response({
                     "status": "error",
-                    "message": "Could not stablish connection with the HUB.",
+                    "message": "Could not establish connection with the HUB.",
                     "error_msg": str(e)
                 }, status=status.HTTP_424_FAILED_DEPENDENCY)
 
-            if response.status_code != 200:
+            if response.status_code != 200 or hub_data is None:
                 return Response({
                     "status": "error",
-                    "message": "Something went wrong!"
+                    "message": "Something went wrong! HUB returned an unexpected response."
                 }, status=status.HTTP_424_FAILED_DEPENDENCY)
+
+            # Refresh product from DB to check if it has been restocked
+            product.refresh_from_db()
+            if product.quantity < quantity:
+                return Response({
+                    "status": "error",
+                    "message": f"Not enough {product.name} in stock after restock attempt."
+                }, status=status.HTTP_409_CONFLICT)
 
         try:
             with transaction.atomic():
@@ -97,7 +114,7 @@ class SellProductAPIView(APIView):
                 product.save()
                 return Response({
                     "status": "success",
-                    "message": f"Sold: {quantity} {product.name}'s"
+                    "message": f"Sold {quantity} units of {product.name}"
                 }, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({
