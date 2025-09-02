@@ -4,6 +4,7 @@ from django.db import transaction
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.conf import settings
 
 from .serializers import ProductSerializer
 from .models import Product
@@ -77,7 +78,7 @@ class SellProductAPIView(APIView):
         product = get_object_or_404(Product, slug=name)
 
         if product.quantity < quantity:
-            hub_endpoint = f"http://100.87.77.38:8000/hub/v1/"
+            hub_endpoint = settings.HUB_IP
             quantity_required = quantity - product.quantity
             
             try:

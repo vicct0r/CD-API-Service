@@ -19,6 +19,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 env = environ.Env(BEBUG=(bool, False))
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
+HUB_IP = env("HUB_IP", default="http://127.0.0.1:8000")
+
 
 INSTALLED_APPS = [
     'django.contrib.admin',
