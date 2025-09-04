@@ -12,3 +12,8 @@ class ProductSerializer(serializers.ModelSerializer):
             'is_active': {'read_only': True},
             'slug': {'read_only': True}
         }
+
+
+class ProductRequestSerializer(serializers.Serializer):
+    product = serializers.CharField()
+    quantity = serializers.IntegerField()

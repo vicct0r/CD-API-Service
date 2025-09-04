@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.conf import settings
 
-from .serializers import ProductSerializer
+from .serializers import ProductSerializer, ProductRequestSerializer
 from .models import Product
 import requests
 
@@ -82,12 +82,17 @@ class SellProductAPIView(APIView):
             quantity_required = quantity - product.quantity
             
             try:
-                response = requests.post(url=f"{hub_endpoint}cd/request/{product.slug}/{quantity_required}/", timeout=5)
+                data = {
+                    "product": product,
+                    "quantity": quantity_required
+                }
+
+                response = requests.post(url=f"{hub_endpoint}cd/request/", data=data, timeout=5)
                 response.raise_for_status()
                 try:
                     hub_data = response.json()
                 except ValueError:
-                    hub_data = None  # Response was not JSON
+                    hub_data = None
             except Exception as e:
                 return Response({
                     "status": "error",
@@ -174,19 +179,14 @@ class BuyProductAPIView(APIView):
 
 
 class ProductRequestAPIView(APIView):
-    def get(self, request, *args, **kwargs):
-        slug = kwargs.get('product')
-        quantity = int(kwargs.get('quantity'))
-
-        if not slug or quantity is None:
-            return Response({
-                "status": "error",
-                "message": "Provide the product and quantity for the service!"
-            }, status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request, *args, **kwargs):
+        serializer = ProductRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
         
-        product = get_object_or_404(Product, slug=slug)
+        product = get_object_or_404(Product, slug=data['product'])
 
-        if product.quantity < quantity:
+        if product.quantity < data['quantity']:
             enought_products = False
         else:
             enought_products = True

@@ -8,5 +8,5 @@ urlpatterns = [
     path('product/register/', ProductsRegisterAPIView.as_view(), name='product_register'),
     path('product/change/<slug:slug>/', ProductChangeAPIView.as_view(), name='product_change'),
     path('product/buy/<slug:product>/<int:quantity>/', BuyProductAPIView.as_view(), name='product_buy'),
-    path('product/request/<slug:product>/<int:quantity>/', ProductRequestAPIView.as_view(), name='product_request')
+    path('product/request/', ProductRequestAPIView.as_view(), name='product_request')
 ]
